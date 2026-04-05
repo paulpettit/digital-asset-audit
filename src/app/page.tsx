@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Card, { MetricCard } from "@/components/Card";
 import StatusBadge from "@/components/StatusBadge";
 import {
@@ -7,6 +8,7 @@ import {
   Wallet,
   ShieldCheck,
   CheckCircle2,
+  Activity,
 } from "lucide-react";
 import {
   mockTransactions,
@@ -49,9 +51,9 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 shadow-xl">
+    <div className="rounded-lg border border-card-border bg-card px-3 py-2 shadow-xl">
       {label && (
-        <p className="mb-1 text-xs font-medium text-slate-300">{label}</p>
+        <p className="mb-1 text-xs font-medium text-secondary">{label}</p>
       )}
       {payload.map((entry, i) => (
         <p key={i} className="text-xs" style={{ color: entry.color }}>
@@ -63,6 +65,12 @@ const CustomTooltip = ({
 };
 
 export default function DashboardPage() {
+  const [chartsReady, setChartsReady] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setChartsReady(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // Compute transaction status counts
   const txStatusCounts = mockTransactions.reduce(
     (acc, tx) => {
@@ -135,17 +143,21 @@ export default function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Engagement overview and audit progress
-        </p>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+          <p className="mt-1 text-sm text-secondary">Engagement overview and audit progress</p>
+        </div>
+        <div className="inline-flex items-center gap-2 rounded-lg border border-card-border bg-card px-3 py-2 text-xs text-secondary">
+          <Activity className="h-3.5 w-3.5 text-accent" />
+          Updated with latest imported activity
+        </div>
       </div>
 
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           title="Total Transactions"
           value={mockTransactions.length}
@@ -174,52 +186,48 @@ export default function DashboardPage() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1.2fr_1fr]">
         {/* Verification Progress Bar Chart */}
         <Card>
-          <h2 className="mb-4 text-sm font-semibold text-white">
-            Verification Progress
-          </h2>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
+          <h2 className="mb-3 text-base font-semibold text-white">Verification Progress</h2>
+          <div className="h-64 min-w-0">
+            {chartsReady && <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={verificationData}
-                margin={{ top: 8, right: 16, bottom: 0, left: -8 }}
+                margin={{ top: 6, right: 8, bottom: 0, left: -12 }}
               >
                 <XAxis
                   dataKey="name"
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  tick={{ fill: "#b4c2d7", fontSize: 12 }}
                 />
                 <YAxis
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fill: "#94a3b8", fontSize: 12 }}
+                  tick={{ fill: "#b4c2d7", fontSize: 12 }}
                   allowDecimals={false}
                 />
                 <Tooltip
                   content={<CustomTooltip />}
                   cursor={{ fill: "rgba(255,255,255,0.03)" }}
                 />
-                <Bar dataKey="count" name="Transactions" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" name="Transactions" radius={[8, 8, 0, 0]} maxBarSize={56}>
                   {verificationData.map((entry, index) => (
                     <Cell key={index} fill={entry.fill} />
                   ))}
                 </Bar>
               </BarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>}
           </div>
         </Card>
 
         {/* Audit Procedure Status Pie Chart */}
         <Card>
-          <h2 className="mb-4 text-sm font-semibold text-white">
-            Audit Procedure Status
-          </h2>
-          <div className="flex h-64 items-center">
-            <div className="w-1/2">
-              <ResponsiveContainer width="100%" height={220}>
+          <h2 className="mb-3 text-base font-semibold text-white">Audit Procedure Status</h2>
+          <div className="flex h-64 min-w-0 items-center">
+            <div className="w-[55%] min-w-0">
+              {chartsReady && <ResponsiveContainer width="100%" height={220}>
                 <PieChart>
                   <Pie
                     data={procedureData}
@@ -240,7 +248,7 @@ export default function DashboardPage() {
                       if (!active || !payload?.length) return null;
                       const d = payload[0];
                       return (
-                        <div className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-2 shadow-xl">
+                        <div className="rounded-lg border border-card-border bg-card px-3 py-2 shadow-xl">
                           <p
                             className="text-xs"
                             style={{ color: d.payload.color }}
@@ -252,23 +260,23 @@ export default function DashboardPage() {
                     }}
                   />
                 </PieChart>
-              </ResponsiveContainer>
+              </ResponsiveContainer>}
             </div>
-            <div className="flex w-1/2 flex-col gap-3 pl-2">
+            <div className="flex w-[45%] flex-col gap-2.5 pl-2">
               {procedureData.map((entry, i) => (
                 <div key={i} className="flex items-center gap-2">
                   <span
                     className="h-2.5 w-2.5 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-xs text-slate-400">{entry.name}</span>
+                  <span className="text-xs text-secondary">{entry.name}</span>
                   <span className="ml-auto text-xs font-semibold text-white">
                     {entry.value}
                   </span>
                 </div>
               ))}
-              <div className="mt-1 border-t border-slate-700 pt-2">
-                <span className="text-xs text-slate-500">
+              <div className="mt-1 border-t border-card-border pt-2">
+                <span className="text-xs text-secondary">
                   {mockProcedures.length} total procedures
                 </span>
               </div>
@@ -279,50 +287,64 @@ export default function DashboardPage() {
 
       {/* Recent Activity */}
       <Card>
-        <h2 className="mb-4 text-sm font-semibold text-white">
-          Recent Activity
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+        <h2 className="mb-3 text-base font-semibold text-white">Recent Activity</h2>
+
+        <div className="space-y-2 md:hidden">
+          {recentTx.map((tx) => (
+            <div key={tx.id} className="rounded-lg border border-card-border bg-white/[0.02] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-mono text-xs text-white">{tx.txid.slice(0, 8)}...{tx.txid.slice(-4)}</p>
+                  <p className="mt-1 text-xs text-secondary">
+                    {new Date(tx.date).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <StatusBadge status={tx.status} />
+              </div>
+              <p className="mt-2 text-sm font-semibold text-white">
+                {tx.valueBTC.toLocaleString(undefined, {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 4,
+                })} BTC
+              </p>
+            </div>
+          ))}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
+          <table className="w-full min-w-[500px] text-sm">
             <thead>
-              <tr className="border-b border-slate-700/50">
-                <th className="pb-3 pr-4 text-left text-xs font-medium text-slate-500">
-                  TX ID
-                </th>
-                <th className="pb-3 pr-4 text-left text-xs font-medium text-slate-500">
-                  Amount (BTC)
-                </th>
-                <th className="pb-3 pr-4 text-left text-xs font-medium text-slate-500">
-                  Date
-                </th>
-                <th className="pb-3 text-left text-xs font-medium text-slate-500">
-                  Status
-                </th>
+              <tr className="border-b border-card-border">
+                <th className="pb-3 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-secondary">TX ID</th>
+                <th className="pb-3 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-secondary">Amount (BTC)</th>
+                <th className="pb-3 pr-4 text-left text-xs font-semibold uppercase tracking-wide text-secondary">Date</th>
+                <th className="whitespace-nowrap pb-3 text-left text-xs font-semibold uppercase tracking-wide text-secondary">Status</th>
               </tr>
             </thead>
             <tbody>
               {recentTx.map((tx) => (
-                <tr
-                  key={tx.id}
-                  className="border-b border-slate-800/50 last:border-0"
-                >
+                <tr key={tx.id} className="border-b border-card-border/80 last:border-0">
                   <td className="py-3 pr-4 font-mono text-xs text-slate-300">
                     {tx.txid.slice(0, 8)}...{tx.txid.slice(-4)}
                   </td>
-                  <td className="py-3 pr-4 text-xs text-white">
+                  <td className="py-3 pr-4 text-xs font-medium text-white">
                     {tx.valueBTC.toLocaleString(undefined, {
                       minimumFractionDigits: 1,
                       maximumFractionDigits: 4,
                     })}
                   </td>
-                  <td className="py-3 pr-4 text-xs text-slate-400">
+                  <td className="py-3 pr-4 text-xs text-secondary">
                     {new Date(tx.date).toLocaleDateString("en-US", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
                     })}
                   </td>
-                  <td className="py-3">
+                  <td className="whitespace-nowrap py-3">
                     <StatusBadge status={tx.status} />
                   </td>
                 </tr>

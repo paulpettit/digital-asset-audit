@@ -36,6 +36,8 @@ export default function TransactionsPage() {
   const [verifyingTx, setVerifyingTx] = useState<Transaction | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [showVerifyConfirm, setShowVerifyConfirm] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const filteredTransactions = transactions.filter((tx) => {
     const matchesSearch =
@@ -69,12 +71,16 @@ export default function TransactionsPage() {
   }
 
   function handleVerifySelected() {
+    const count = selectedIds.size;
     setTransactions((prev) =>
       prev.map((tx) =>
         selectedIds.has(tx.id) ? { ...tx, status: "verified" as const, blockConfirmations: tx.blockConfirmations ?? 1 } : tx
       )
     );
     setSelectedIds(new Set());
+    setShowVerifyConfirm(false);
+    setSuccessMessage(`${count} transaction${count > 1 ? "s" : ""} verified successfully.`);
+    setTimeout(() => setSuccessMessage(null), 3000);
   }
 
   function handleVerifyOnBlockchain() {
@@ -153,7 +159,7 @@ export default function TransactionsPage() {
             </div>
           </div>
           <button
-            onClick={handleVerifySelected}
+            onClick={() => setShowVerifyConfirm(true)}
             disabled={selectedIds.size === 0}
             className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-40"
           >
@@ -169,9 +175,9 @@ export default function TransactionsPage() {
       </Card>
 
       {/* Transaction Table */}
-      <Card className="overflow-hidden p-0">
+      <Card className="p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead>
               <tr className="border-b border-card-border text-left">
                 <th className="px-4 py-3">
@@ -271,6 +277,47 @@ export default function TransactionsPage() {
           </table>
         </div>
       </Card>
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-400 shadow-lg backdrop-blur-sm">
+          <CheckCircle2 className="h-4 w-4" />
+          {successMessage}
+        </div>
+      )}
+
+      {/* Verify Selected Confirmation Dialog */}
+      {showVerifyConfirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setShowVerifyConfirm(false)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-white mb-2">Confirm Verification</h2>
+            <p className="text-sm text-slate-400 mb-6">
+              Are you sure you want to verify {selectedIds.size} transaction{selectedIds.size > 1 ? "s" : ""}? This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setShowVerifyConfirm(false)}
+                className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleVerifySelected}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Verify
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Verify Transaction Panel / Modal */}
       {verifyingTx && (

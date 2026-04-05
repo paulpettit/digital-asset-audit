@@ -1,17 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0b1120;
-  --foreground: #e2e8f0;
-  --card: #111827;
-  --card-border: #1e293b;
-  --accent: #3b82f6;
-  --accent-green: #10b981;
-  --accent-amber: #f59e0b;
-  --accent-red: #ef4444;
-  --accent-purple: #8b5cf6;
-  --muted: #64748b;
-  --sidebar: #0f172a;
+  --background: oklch(0.17 0.03 255);
+  --foreground: oklch(0.93 0.01 255);
+  --card: oklch(0.22 0.03 255);
+  --card-border: oklch(0.34 0.02 255 / 0.55);
+  --accent: oklch(0.7 0.16 250);
+  --accent-green: oklch(0.78 0.16 160);
+  --accent-amber: oklch(0.82 0.16 85);
+  --accent-red: oklch(0.72 0.18 28);
+  --accent-purple: oklch(0.72 0.16 302);
+  --muted: oklch(0.76 0.02 255);
+  --sidebar: oklch(0.2 0.03 255);
+  --surface-elevated: oklch(0.26 0.03 255);
+  --ring: oklch(0.72 0.16 250 / 0.6);
 }
 
 @theme inline {
@@ -33,7 +35,12 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Segoe UI", Arial, Helvetica, sans-serif;
+  letter-spacing: -0.01em;
+  background-image:
+    radial-gradient(1100px 500px at 8% -12%, oklch(0.42 0.09 250 / 0.16), transparent 58%),
+    radial-gradient(900px 460px at 100% -8%, oklch(0.4 0.08 175 / 0.12), transparent 54%);
+  background-attachment: fixed;
 }
 
 /* Custom scrollbar */
@@ -59,6 +66,11 @@ body {
   transition-timing-function: ease-in-out;
 }
 
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
 /* Glow effects */
 .glow-blue {
   box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
@@ -73,5 +85,21 @@ body {
   box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
 }
 .glow-purple {
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.15);
+  box-shadow: 0 0 20px rgba(167, 139, 250, 0.15);
+}
+
+.surface-border {
+  border-color: var(--card-border);
+}
+
+.surface-elevated {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--surface-elevated) 92%, black 8%),
+    var(--card)
+  );
+}
+
+.text-secondary {
+  color: var(--muted);
 }

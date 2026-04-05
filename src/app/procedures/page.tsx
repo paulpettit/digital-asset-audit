@@ -35,6 +35,10 @@ export default function ProceduresPage() {
   const [procedures, setProcedures] =
     useState<ExistenceProcedure[]>(mockProcedures);
   const [activeTab, setActiveTab] = useState<string>("All");
+  const [inputModal, setInputModal] = useState<{ type: "evidence" | "note"; procedureId: string } | null>(null);
+  const [inputValue, setInputValue] = useState("");
+  const [confirmCompleteId, setConfirmCompleteId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const filtered = useMemo(
     () =>
@@ -71,6 +75,7 @@ export default function ProceduresPage() {
   }, [filtered]);
 
   function markComplete(id: string) {
+    const proc = procedures.find((p) => p.id === id);
     setProcedures((prev) =>
       prev.map((p) =>
         p.id === id
@@ -82,30 +87,26 @@ export default function ProceduresPage() {
           : p
       )
     );
+    setConfirmCompleteId(null);
+    setSuccessMessage(`"${proc?.procedure}" marked as complete.`);
+    setTimeout(() => setSuccessMessage(null), 3000);
   }
 
-  function addEvidence(id: string) {
-    const value = prompt("Enter evidence description:");
-    if (!value) return;
+  function handleInputSubmit() {
+    if (!inputModal || !inputValue.trim()) return;
+    const { type, procedureId } = inputModal;
+    const value = inputValue.trim();
     setProcedures((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, evidence: p.evidence ? `${p.evidence}; ${value}` : value }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== procedureId) return p;
+        if (type === "evidence") {
+          return { ...p, evidence: p.evidence ? `${p.evidence}; ${value}` : value };
+        }
+        return { ...p, notes: p.notes ? `${p.notes}; ${value}` : value };
+      })
     );
-  }
-
-  function addNote(id: string) {
-    const value = prompt("Enter note:");
-    if (!value) return;
-    setProcedures((prev) =>
-      prev.map((p) =>
-        p.id === id
-          ? { ...p, notes: p.notes ? `${p.notes}; ${value}` : value }
-          : p
-      )
-    );
+    setInputModal(null);
+    setInputValue("");
   }
 
   return (
@@ -219,7 +220,7 @@ export default function ProceduresPage() {
                     <div className="flex flex-wrap gap-2 sm:flex-col sm:items-end shrink-0">
                       {proc.status !== "complete" && (
                         <button
-                          onClick={() => markComplete(proc.id)}
+                          onClick={() => setConfirmCompleteId(proc.id)}
                           className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/20"
                         >
                           <CheckCircle2 className="h-3 w-3" />
@@ -227,14 +228,14 @@ export default function ProceduresPage() {
                         </button>
                       )}
                       <button
-                        onClick={() => addEvidence(proc.id)}
+                        onClick={() => { setInputModal({ type: "evidence", procedureId: proc.id }); setInputValue(""); }}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                       >
                         <FileText className="h-3 w-3" />
                         Add Evidence
                       </button>
                       <button
-                        onClick={() => addNote(proc.id)}
+                        onClick={() => { setInputModal({ type: "note", procedureId: proc.id }); setInputValue(""); }}
                         className="inline-flex items-center gap-1.5 rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-xs font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white"
                       >
                         <MessageSquare className="h-3 w-3" />
@@ -299,6 +300,91 @@ export default function ProceduresPage() {
           </Card>
         </div>
       </div>
+
+      {/* Success Toast */}
+      {successMessage && (
+        <div className="fixed top-6 right-6 z-50 flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-400 shadow-lg backdrop-blur-sm">
+          <CheckCircle2 className="h-4 w-4" />
+          {successMessage}
+        </div>
+      )}
+
+      {/* Mark Complete Confirmation Dialog */}
+      {confirmCompleteId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setConfirmCompleteId(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-sm rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-white mb-2">Confirm Completion</h2>
+            <p className="text-sm text-slate-400 mb-6">
+              Are you sure you want to mark &ldquo;{procedures.find((p) => p.id === confirmCompleteId)?.procedure}&rdquo; as complete? This action cannot be undone.
+            </p>
+            <div className="flex items-center gap-3 justify-end">
+              <button
+                onClick={() => setConfirmCompleteId(null)}
+                className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => markComplete(confirmCompleteId)}
+                className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-emerald-500"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Mark Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Evidence / Add Note Modal */}
+      {inputModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={() => setInputModal(null)}
+        >
+          <div
+            className="mx-4 w-full max-w-md rounded-xl border border-card-border bg-card p-6 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-white mb-4">
+              {inputModal.type === "evidence" ? "Add Evidence" : "Add Note"}
+            </h2>
+            <textarea
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={inputModal.type === "evidence" ? "Enter evidence description..." : "Enter note..."}
+              rows={4}
+              autoFocus
+              className="w-full rounded-lg border border-card-border bg-white/5 px-4 py-3 text-sm text-white placeholder-muted outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none"
+            />
+            <div className="flex items-center gap-3 justify-end mt-4">
+              <button
+                onClick={() => setInputModal(null)}
+                className="rounded-lg border border-card-border px-4 py-2 text-sm font-medium text-muted transition-colors hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleInputSubmit}
+                disabled={!inputValue.trim()}
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {inputModal.type === "evidence" ? (
+                  <><FileText className="h-4 w-4" />Add Evidence</>
+                ) : (
+                  <><MessageSquare className="h-4 w-4" />Add Note</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
