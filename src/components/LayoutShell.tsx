@@ -1,11 +1,18 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import Sidebar from "./Sidebar";
 
 export default function LayoutShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  const isCaptureRoute = pathname.startsWith("/trace-capture");
+
+  if (isCaptureRoute) {
+    return <main className="min-h-screen">{children}</main>;
+  }
 
   return (
     <>
