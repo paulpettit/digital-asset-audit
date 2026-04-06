@@ -2,6 +2,14 @@
 
 A modern, automated pre-audit platform for verifying the existence and control of digital assets (Bitcoin-family) held by audited entities. Built to streamline the labor-intensive manual processes involved in digital asset audit engagements.
 
+## Product Walkthrough
+
+![ChainAudit app walkthrough](public/gifs/chainaudit-walkthrough.gif)
+
+## Wallet Tracing Demo
+
+![Wallet tracing flow with node renaming](public/gifs/chainaudit-tracing-rename.gif)
+
 ## Problem Statement
 
 Audit teams performing existence and control testing over digital assets face significant manual effort:
